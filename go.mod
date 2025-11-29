@@ -1,4 +1,4 @@
-module tr
+module github.com/nikkrT/tr
 
 go 1.25
 
