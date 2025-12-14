@@ -27,7 +27,7 @@ func (w *ProductRepo) FindById(ctx context.Context, id int) (model.Product, erro
 	}
 	product := model.Product{}
 	if rows.Next() {
-		err = rows.Scan(&product.Id, &product.Name, &product.Description, &product.Price, &product.CreatedAt)
+		err = rows.Scan(&product.Id, &product.Name, &product.Description, &product.Price, &product.CreatedAt, &product.UpdatedAt, &product.DeletedAt)
 		if err != nil {
 			return model.Product{}, fmt.Errorf("scan product rr: %w", err)
 		}

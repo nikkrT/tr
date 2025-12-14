@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
+
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -40,7 +41,6 @@ func InitDB(ctx context.Context, URL string) (*pgxpool.Pool, error) {
 	if err := pool.Ping(ctx); err != nil {
 		return nil, fmt.Errorf("error pinging database: %v", err)
 	}
-	defer pool.Close()
 	//err = createTables(ctx, pool)
 	//if err != nil {
 	//	return nil, fmt.Errorf("error creating tables: %v", err)

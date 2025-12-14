@@ -22,10 +22,10 @@ func NewProductHandler(r *repo.ProductRepo) *Product {
 
 func (p *Product) GetById(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	fmt.Println(id + "ewfewfewfewf")
 	idInt, _ := strconv.Atoi(id)
 	product, err := p.Repo.FindById(r.Context(), idInt)
 	if err != nil {
+		fmt.Printf("бляяя: %s\n", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 	if err := json.NewEncoder(w).Encode(product); err != nil {

@@ -30,6 +30,15 @@ func NewApplication(cfg Config) *Application {
 
 func (app *Application) Start(ctx context.Context) error {
 
+	pool, err := db.InitDB(ctx, app.config.dbAddr)
+	if err != nil {
+		return fmt.Errorf("failed to init db: %v", err)
+	}
+
+	app.db = pool
+
+	defer app.db.Close()
+
 	productRepo := repo.NewProductRepo(app.db)
 	productHandler := handlers.NewProductHandler(productRepo)
 	app.router = routes.LoadRoutesProduct(productHandler)
@@ -41,13 +50,6 @@ func (app *Application) Start(ctx context.Context) error {
 		ReadTimeout:  time.Minute,
 		WriteTimeout: time.Minute,
 	}
-
-	pool, err := db.InitDB(ctx, app.config.dbAddr)
-	if err != nil {
-		return fmt.Errorf("failed to init db: %v", err)
-	}
-
-	app.db = pool
 
 	ch := make(chan error)
 	go func() {
