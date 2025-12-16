@@ -1,13 +1,14 @@
 package routes
 
 import (
+	"net/http"
+	"productService/handlers"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"micr_course/handlers"
-	"net/http"
 )
 
-func LoadRoutesProduct(productHandler *handlers.Product) *chi.Mux {
+func LoadRoutesProduct(productHandler *handlers.ProductHand) *chi.Mux {
 	router := chi.NewRouter()
 	router.Use(middleware.Logger)
 
@@ -20,6 +21,10 @@ func LoadRoutesProduct(productHandler *handlers.Product) *chi.Mux {
 
 	router.Route("/products", func(r chi.Router) {
 		r.Get("/{id}", productHandler.GetById)
+		r.Get("/", productHandler.List)
+		r.Post("/", productHandler.Create)
+		r.Put("/{id}", productHandler.Update)
+		r.Delete("/{id}", productHandler.Delete)
 	})
 
 	return router

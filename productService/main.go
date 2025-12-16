@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	"micr_course/application"
 	"os/signal"
+	"productService/application"
 	"syscall"
 )
 

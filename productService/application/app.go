@@ -3,11 +3,12 @@ package application
 import (
 	"context"
 	"fmt"
-	"micr_course/db"
-	"micr_course/db/repo"
-	"micr_course/handlers"
-	"micr_course/routes"
 	"net/http"
+	"productService/buisness"
+	"productService/db"
+	"productService/db/repo"
+	"productService/handlers"
+	"productService/routes"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -38,9 +39,10 @@ func (app *Application) Start(ctx context.Context) error {
 	app.db = pool
 
 	defer app.db.Close()
-
+	
 	productRepo := repo.NewProductRepo(app.db)
-	productHandler := handlers.NewProductHandler(productRepo)
+	productService := buisness.NewProductService(productRepo)
+	productHandler := handlers.NewProductHandler(productService)
 	app.router = routes.LoadRoutesProduct(productHandler)
 
 	server := &http.Server{
