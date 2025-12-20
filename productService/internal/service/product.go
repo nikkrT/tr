@@ -1,10 +1,10 @@
-package buisness
+package service
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"productService/model"
+	"productService/internal/model"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -29,7 +29,7 @@ func ValidateProduct(product model.Product) error {
 	return validate.Struct(product)
 }
 
-func (s *ProductService) Create(ctx context.Context, p model.Product) error {
+func (s *ProductService) CreateProduct(ctx context.Context, p model.Product) error {
 	err := ValidateProduct(p)
 	if err != nil {
 		return fmt.Errorf("Product validation error: %w", err)
@@ -39,7 +39,7 @@ func (s *ProductService) Create(ctx context.Context, p model.Product) error {
 
 var ErrNotFound = errors.New("product not found")
 
-func (s *ProductService) ReadById(ctx context.Context, id int) (model.Product, error) {
+func (s *ProductService) ReadProduct(ctx context.Context, id int) (model.Product, error) {
 	product, err := s.Repo.ReadById(ctx, id)
 	if err != nil {
 		return model.Product{}, fmt.Errorf("Product read error: %w", ErrNotFound)
@@ -53,14 +53,14 @@ func (s *ProductService) ReadAll(ctx context.Context, filteredBy string) ([]mode
 	}
 	return products, nil
 }
-func (s *ProductService) Update(ctx context.Context, p model.Product) error {
+func (s *ProductService) UpdateProduct(ctx context.Context, p model.Product) error {
 	err := ValidateProduct(p)
 	if err != nil {
 		return fmt.Errorf("Product validation error: %w", err)
 	}
 	return s.Repo.Update(ctx, p)
 }
-func (s *ProductService) Delete(ctx context.Context, id int) error {
+func (s *ProductService) DeleteProduct(ctx context.Context, id int) error {
 	err := s.Repo.DeleteById(ctx, id)
 	if err != nil {
 		return fmt.Errorf("Product delete error: %w", err)

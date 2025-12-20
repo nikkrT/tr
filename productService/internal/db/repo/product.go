@@ -3,7 +3,7 @@ package repo
 import (
 	"context"
 	"fmt"
-	"productService/model"
+	"productService/internal/model"
 	"time"
 
 	"github.com/jackc/pgx/v5"

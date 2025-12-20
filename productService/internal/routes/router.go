@@ -2,7 +2,7 @@ package routes
 
 import (
 	"net/http"
-	"productService/handlers"
+	"productService/delivery/handlers"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"

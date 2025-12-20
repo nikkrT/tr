@@ -5,26 +5,26 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"productService/buisness"
-	"productService/model"
+	"productService/internal/model"
+	"productService/internal/service"
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
 )
 
 type ProductHandler interface {
-	Create(ctx context.Context, product model.Product) error
-	ReadById(ctx context.Context, id int) (model.Product, error)
+	CreateProduct(ctx context.Context, product model.Product) error
+	ReadProduct(ctx context.Context, id int) (model.Product, error)
 	ReadAll(ctx context.Context, filteredBy string) ([]model.Product, error)
-	Update(ctx context.Context, product model.Product) error
-	Delete(ctx context.Context, id int) error
+	UpdateProduct(ctx context.Context, product model.Product) error
+	DeleteProduct(ctx context.Context, id int) error
 }
 
 type ProductHand struct {
 	Service ProductHandler
 }
 
-func NewProductHandler(r *buisness.ProductService) *ProductHand {
+func NewProductHandler(r *service.ProductService) *ProductHand {
 	return &ProductHand{
 		Service: r,
 	}
@@ -45,7 +45,7 @@ func (p *ProductHand) Create(w http.ResponseWriter, r *http.Request) {
 		Description: body.Description,
 		Price:       body.Price,
 	}
-	err := p.Service.Create(r.Context(), product)
+	err := p.Service.CreateProduct(r.Context(), product)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("insert error: %v", err), http.StatusInternalServerError)
 		return
@@ -56,9 +56,9 @@ func (p *ProductHand) Create(w http.ResponseWriter, r *http.Request) {
 func (p *ProductHand) GetById(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	idInt, _ := strconv.Atoi(id)
-	product, err := p.Service.ReadById(r.Context(), idInt)
+	product, err := p.Service.ReadProduct(r.Context(), idInt)
 	if err != nil {
-		if err == buisness.ErrNotFound {
+		if err == service.ErrNotFound {
 			http.Error(w, fmt.Sprintf("Product with id %v not found", idInt), http.StatusNotFound)
 			return
 		}
@@ -95,13 +95,13 @@ func (p *ProductHand) Update(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("decode error: %v", err), http.StatusBadRequest)
 		return
 	}
-	product, err := p.Service.ReadById(r.Context(), body.Id)
+	product, err := p.Service.ReadProduct(r.Context(), body.Id)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Product with id %v not found", body.Id), http.StatusNotFound)
 		return
 	}
 	product.Price = body.Price
-	err = p.Service.Update(r.Context(), product)
+	err = p.Service.UpdateProduct(r.Context(), product)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -117,7 +117,7 @@ func (p *ProductHand) Update(w http.ResponseWriter, r *http.Request) {
 func (h *ProductHand) Delete(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	idInt, _ := strconv.Atoi(id)
-	err := h.Service.Delete(r.Context(), idInt)
+	err := h.Service.DeleteProduct(r.Context(), idInt)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

@@ -3,15 +3,23 @@ package application
 import (
 	"context"
 	"fmt"
-	"net/http"
-	"productService/buisness"
-	"productService/db"
-	"productService/db/repo"
-	"productService/handlers"
-	"productService/routes"
-	"time"
+
+	"productService/delivery/grpc"
+	"productService/delivery/handlers"
+
+	"productService/internal/db"
+	"productService/internal/db/repo"
+	"productService/internal/routes"
+	"productService/internal/service"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	g "google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
+	
+	"net"
+	"net/http"
+	pb "productService/pkg/proto"
+	"time"
 )
 
 type Application struct {
@@ -39,10 +47,11 @@ func (app *Application) Start(ctx context.Context) error {
 	app.db = pool
 
 	defer app.db.Close()
-	
+
 	productRepo := repo.NewProductRepo(app.db)
-	productService := buisness.NewProductService(productRepo)
+	productService := service.NewProductService(productRepo)
 	productHandler := handlers.NewProductHandler(productService)
+	grpcServer := grpc.NewGRPCServer(productService)
 	app.router = routes.LoadRoutesProduct(productHandler)
 
 	server := &http.Server{
@@ -60,9 +69,20 @@ func (app *Application) Start(ctx context.Context) error {
 		}
 		close(ch)
 	}()
+	go func() {
+		lis, err := net.Listen("tcp", ":8081")
+		if err != nil {
+			ch <- fmt.Errorf("failed to listen: %v", err)
+		}
+		s := g.NewServer()
+		reflection.Register(s)
+		pb.RegisterProductServiceServer(s, grpcServer) // Регистрируем нашу реализацию
+		ch <- s.Serve(lis)
+	}()
 
 	select {
 	case err := <-ch:
+		fmt.Println(err)
 		return err
 	case <-ctx.Done():
 		timeoutCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)

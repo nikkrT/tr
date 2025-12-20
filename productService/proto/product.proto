@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+package product;
+
+option go_package = "./pkg/pb";
+
+service ProductService {
+  rpc CreateProduct (CreateProductRequest) returns (CreateProductResponse);
+  rpc ReadProduct (ReadProductRequest) returns (ReadProductResponse);
+  rpc UpdateProduct (UpdateProductRequest) returns (UpdateProductResponse);
+  rpc DeleteProduct (DeleteProductRequest) returns (DeleteProduceResponse);
+}
+
+message Product {
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
+  uint32 price = 4;
+}
+
+message CreateProductRequest {
+  string name = 1;
+  string description = 2;
+  uint32 price = 3;
+}
+
+message CreateProductResponse {
+  int64 id = 1;
+}
+
+message ReadProductRequest {
+  int64 id = 1;
+}
+
+message ReadProductResponse {
+  Product product = 1;
+}
+
+message UpdateProductRequest {
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
+  uint32 price = 4;
+}
+
+message UpdateProductResponse {
+  bool result = 1;
+}
+
+message DeleteProductRequest {
+  int64 id = 1;
+}
+
+message DeleteProduceResponse {
+  bool result = 1;
+}
