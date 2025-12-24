@@ -3,6 +3,8 @@ package application
 import (
 	"context"
 	"fmt"
+	"productService/config"
+	"productService/delivery/events"
 
 	"productService/delivery/grpc"
 	"productService/delivery/handlers"
@@ -15,7 +17,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	g "google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
-	
+
 	"net"
 	"net/http"
 	pb "productService/pkg/proto"
@@ -23,12 +25,13 @@ import (
 )
 
 type Application struct {
-	router http.Handler
-	config Config
-	db     *pgxpool.Pool
+	router   http.Handler
+	config   *config.Config
+	db       *pgxpool.Pool
+	rabbitmq *events.RabbitMQPublisher
 }
 
-func NewApplication(cfg Config) *Application {
+func NewApplication(cfg *config.Config) *Application {
 	app := &Application{
 		router: nil,
 		config: cfg,
@@ -39,7 +42,7 @@ func NewApplication(cfg Config) *Application {
 
 func (app *Application) Start(ctx context.Context) error {
 
-	pool, err := db.InitDB(ctx, app.config.dbAddr)
+	pool, err := db.InitDB(ctx, app.config.Postgres)
 	if err != nil {
 		return fmt.Errorf("failed to init db: %v", err)
 	}
@@ -50,12 +53,17 @@ func (app *Application) Start(ctx context.Context) error {
 
 	productRepo := repo.NewProductRepo(app.db)
 	productService := service.NewProductService(productRepo)
+
 	productHandler := handlers.NewProductHandler(productService)
 	grpcServer := grpc.NewGRPCServer(productService)
+
 	app.router = routes.LoadRoutesProduct(productHandler)
 
+	app.rabbitmq, err = events.NewProducerSetup(app.config.RabbitMQ)
+	defer app.rabbitmq.Close()
+
 	server := &http.Server{
-		Addr:         fmt.Sprintf(":%s", app.config.serverPort),
+		Addr:         fmt.Sprintf(":%s", app.config.Server.ServerPort),
 		Handler:      app.router,
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  time.Minute,

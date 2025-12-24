@@ -4,11 +4,12 @@ import (
 	"context"
 	"os/signal"
 	"productService/application"
+	"productService/config"
 	"syscall"
 )
 
 func main() {
-	app := application.NewApplication(application.LoadConfig())
+	app := application.NewApplication(config.LoadConfig())
 
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()

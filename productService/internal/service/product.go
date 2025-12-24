@@ -16,8 +16,16 @@ type ProductRepository interface {
 	Update(ctx context.Context, p model.Product) error
 	DeleteById(ctx context.Context, id int) error
 }
+
+type RabbitmqProductRepository interface {
+	SendCreated(ctx context.Context, product interface{}) error
+	SendUpdated(ctx context.Context, product interface{}) error
+	SendDeleted(ctx context.Context, product interface{}) error
+}
+
 type ProductService struct {
 	Repo ProductRepository
+	Amqp RabbitmqProductRepository
 }
 
 func NewProductService(repository ProductRepository) *ProductService {
@@ -34,7 +42,15 @@ func (s *ProductService) CreateProduct(ctx context.Context, p model.Product) err
 	if err != nil {
 		return fmt.Errorf("Product validation error: %w", err)
 	}
-	return s.Repo.Create(ctx, p)
+	err = s.Repo.Create(ctx, p)
+	if err != nil {
+		return fmt.Errorf("Product creation error: %w", err)
+	}
+	err = s.Amqp.SendCreated(ctx, p)
+	if err != nil {
+		return fmt.Errorf("Amqp creation error: %w", err)
+	}
+	return nil
 }
 
 var ErrNotFound = errors.New("product not found")

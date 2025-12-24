@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
+	"productService/config"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -33,8 +34,8 @@ import (
 //	return nil
 //}
 
-func InitDB(ctx context.Context, URL string) (*pgxpool.Pool, error) {
-	pool, err := pgxpool.New(ctx, URL)
+func InitDB(ctx context.Context, cfg config.PostgresConfig) (*pgxpool.Pool, error) {
+	pool, err := pgxpool.New(ctx, cfg.Addr)
 	if err != nil {
 		return nil, fmt.Errorf("error connecting to database: %v", err)
 	}
