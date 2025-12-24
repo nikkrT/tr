@@ -52,14 +52,20 @@ func (app *Application) Start(ctx context.Context) error {
 	defer app.db.Close()
 
 	productRepo := repo.NewProductRepo(app.db)
-	productService := service.NewProductService(productRepo)
+
+	app.rabbitmq, err = events.NewProducerSetup(app.config)
+
+	if err != nil {
+		return fmt.Errorf("failed to init rabbitmq: %v", err)
+	}
+
+	productService := service.NewProductService(productRepo, app.rabbitmq)
 
 	productHandler := handlers.NewProductHandler(productService)
 	grpcServer := grpc.NewGRPCServer(productService)
 
 	app.router = routes.LoadRoutesProduct(productHandler)
 
-	app.rabbitmq, err = events.NewProducerSetup(app.config.RabbitMQ)
 	defer app.rabbitmq.Close()
 
 	server := &http.Server{

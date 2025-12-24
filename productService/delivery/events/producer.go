@@ -29,8 +29,8 @@ type RabbitMQPublisher struct {
 	cfg     *config.Config
 }
 
-func NewProducerSetup(cfg *config.RabbitMQ) (*RabbitMQPublisher, error) {
-	conn, err := amqp.Dial(cfg.Addr)
+func NewProducerSetup(cfg *config.Config) (*RabbitMQPublisher, error) {
+	conn, err := amqp.Dial(cfg.RabbitMQ.Addr)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to connect to RabbitMQ: %s", err)
 	}
@@ -39,8 +39,8 @@ func NewProducerSetup(cfg *config.RabbitMQ) (*RabbitMQPublisher, error) {
 		return nil, fmt.Errorf("Failed to open a channel: %s", err)
 	}
 	err = ch.ExchangeDeclare(
-		name,
-		type_,
+		cfg.RabbitMQ.Exchange,
+		"direct",
 		durable,
 		autoDelete,
 		internal,
@@ -53,18 +53,19 @@ func NewProducerSetup(cfg *config.RabbitMQ) (*RabbitMQPublisher, error) {
 	return &RabbitMQPublisher{
 		conn:    conn,
 		channel: ch,
+		cfg:     cfg,
 	}, nil
 }
 
-func (p *RabbitMQPublisher) SendProductCreated(product interface{}) error {
+func (p *RabbitMQPublisher) SendProductCreated(ctx context.Context, product interface{}) error {
 	return p.publish("product.created", product)
 }
 
-func (p *RabbitMQPublisher) SendProductUpdated(product interface{}) error {
+func (p *RabbitMQPublisher) SendProductUpdated(ctx context.Context, product interface{}) error {
 	return p.publish("product.updated", product)
 }
 
-func (p *RabbitMQPublisher) SendProductDeleted(product interface{}) error {
+func (p *RabbitMQPublisher) SendProductDeleted(ctx context.Context, product interface{}) error {
 	return p.publish("product.deleted", product)
 }
 
@@ -78,7 +79,7 @@ func (p *RabbitMQPublisher) Close() {
 }
 
 func (p *RabbitMQPublisher) publish(routing string, payload interface{}) error {
-	log.Printf("Publishing message to RabbitMQ: %s %s", p.cfg.RabbitMQ.Exchange, p.cfg.RabbitMQ.RoutingKey)
+	log.Printf("Publishing message to RabbitMQ: %s", p.cfg.RabbitMQ.Exchange)
 	body, err := json.Marshal(payload)
 	if err != nil {
 		return fmt.Errorf("Failed to marshal payload: %s", err)
