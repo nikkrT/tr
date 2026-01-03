@@ -65,7 +65,6 @@ func (app *Application) Start(ctx context.Context) error {
 	grpcServer := grpc.NewGRPCServer(productService)
 
 	app.router = routes.LoadRoutesProduct(productHandler)
-
 	defer app.rabbitmq.Close()
 
 	server := &http.Server{
@@ -84,14 +83,15 @@ func (app *Application) Start(ctx context.Context) error {
 		close(ch)
 	}()
 	go func() {
-		lis, err := net.Listen("tcp", ":8081")
+		lis, err := net.Listen("tcp", ":9090")
 		if err != nil {
 			ch <- fmt.Errorf("failed to listen: %v", err)
 		}
 		s := g.NewServer()
 		reflection.Register(s)
-		pb.RegisterProductServiceServer(s, grpcServer) // Регистрируем нашу реализацию
+		pb.RegisterProductServiceServer(s, grpcServer)
 		ch <- s.Serve(lis)
+		close(ch)
 	}()
 
 	select {

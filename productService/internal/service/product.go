@@ -10,7 +10,7 @@ import (
 )
 
 type ProductRepository interface {
-	Create(ctx context.Context, p model.Product) error
+	Create(ctx context.Context, p model.Product) (int, error)
 	ReadById(ctx context.Context, id int) (model.Product, error)
 	ReadAll(ctx context.Context, filtered string) ([]model.Product, error)
 	Update(ctx context.Context, p model.Product) error
@@ -45,11 +45,12 @@ func (s *ProductService) CreateProduct(ctx context.Context, p model.Product) err
 	if err != nil {
 		return fmt.Errorf("Product validation error: %w", err)
 	}
-	err = s.Repo.Create(ctx, p)
+	id, err := s.Repo.Create(ctx, p)
 	if err != nil {
 		return fmt.Errorf("Product creation error: %w", err)
 	}
-	err = s.Amqp.SendProductCreated(ctx, p)
+	product, err := s.Repo.ReadById(ctx, id)
+	err = s.Amqp.SendProductCreated(ctx, product)
 	if err != nil {
 		return fmt.Errorf("Amqp creation error: %w", err)
 	}
@@ -77,12 +78,20 @@ func (s *ProductService) UpdateProduct(ctx context.Context, p model.Product) err
 	if err != nil {
 		return fmt.Errorf("Product validation error: %w", err)
 	}
+	err = s.Amqp.SendProductUpdated(ctx, p)
+	if err != nil {
+		return fmt.Errorf("Amqp creation error: %w", err)
+	}
 	return s.Repo.Update(ctx, p)
 }
 func (s *ProductService) DeleteProduct(ctx context.Context, id int) error {
 	err := s.Repo.DeleteById(ctx, id)
 	if err != nil {
 		return fmt.Errorf("Product delete error: %w", err)
+	}
+	err = s.Amqp.SendProductDeleted(ctx, id)
+	if err != nil {
+		return fmt.Errorf("Amqp creation error: %w", err)
 	}
 	return nil
 }

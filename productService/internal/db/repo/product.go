@@ -18,13 +18,14 @@ func NewProductRepo(db *pgxpool.Pool) *ProductRepo {
 	return &ProductRepo{DB: db}
 }
 
-func (h *ProductRepo) Create(ctx context.Context, product model.Product) error {
-	sql := "INSERT INTO products (name,description, price,created_at) VALUES ($1, $2, $3, $4)"
-	_, err := h.DB.Exec(ctx, sql, product.Name, product.Description, product.Price, time.Now())
+func (h *ProductRepo) Create(ctx context.Context, product model.Product) (int, error) {
+	sql := "INSERT INTO products (name, description, price, created_at) VALUES ($1, $2, $3, $4) RETURNING id"
+	var id int
+	err := h.DB.QueryRow(ctx, sql, product.Name, product.Description, product.Price, time.Now()).Scan(&id)
 	if err != nil {
-		return fmt.Errorf("Error inserting product into database: %w", err)
+		return 0, fmt.Errorf("error inserting product into database: %w", err)
 	}
-	return nil
+	return id, nil
 }
 
 func (h *ProductRepo) ReadById(ctx context.Context, id int) (model.Product, error) {
