@@ -26,6 +26,7 @@ func (s *Service) SendCreated(ctx context.Context, data []byte) error {
 	}
 	return nil
 }
+
 func (s *Service) SendUpdated(ctx context.Context, data []byte) error {
 	err := s.Infrastucture.EmailUpdated(ctx, data)
 	if err != nil {
@@ -33,6 +34,7 @@ func (s *Service) SendUpdated(ctx context.Context, data []byte) error {
 	}
 	return nil
 }
+
 func (s *Service) SendDeleted(ctx context.Context, data []byte) error {
 	err := s.Infrastucture.EmailDeleted(ctx, data)
 	if err != nil {

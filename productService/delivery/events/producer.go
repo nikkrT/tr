@@ -26,11 +26,33 @@ const (
 type RabbitMQPublisher struct {
 	conn    *amqp.Connection
 	channel *amqp.Channel
-	cfg     *config.Config
+	cfg     *config.RabbitMQ
 }
 
-func NewProducerSetup(cfg *config.Config) (*RabbitMQPublisher, error) {
-	conn, err := amqp.Dial(cfg.RabbitMQ.Addr)
+func NewProducerSetup(cfg *config.RabbitMQ) (*RabbitMQPublisher, error) {
+	var conn *amqp.Connection
+	var err error
+
+	counts := 0
+	maxRetries := 30
+	retryDelay := 2 * time.Second
+
+	for {
+		conn, err = amqp.Dial(cfg.Addr)
+		if err == nil {
+			log.Println("✅ Successfully connected to RabbitMQ")
+			break
+		}
+
+		counts++
+		log.Printf("⏳ Failed to connect to RabbitMQ (Attempt %d/%d): %v. Retrying in %v...", counts, maxRetries, err, retryDelay)
+
+		if counts >= maxRetries {
+			log.Fatalf("❌ Could not connect to RabbitMQ after %d attempts: %v", maxRetries, err)
+		}
+
+		time.Sleep(retryDelay)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("Failed to connect to RabbitMQ: %s", err)
 	}
@@ -39,7 +61,7 @@ func NewProducerSetup(cfg *config.Config) (*RabbitMQPublisher, error) {
 		return nil, fmt.Errorf("Failed to open a channel: %s", err)
 	}
 	err = ch.ExchangeDeclare(
-		cfg.RabbitMQ.Exchange,
+		cfg.Exchange,
 		"direct",
 		durable,
 		autoDelete,
@@ -79,7 +101,7 @@ func (p *RabbitMQPublisher) Close() {
 }
 
 func (p *RabbitMQPublisher) publish(routing string, payload interface{}) error {
-	log.Printf("Publishing message to RabbitMQ: %s", p.cfg.RabbitMQ.Exchange)
+	log.Printf("Publishing message to RabbitMQ: %s", p.cfg.Exchange)
 	body, err := json.Marshal(payload)
 	if err != nil {
 		return fmt.Errorf("Failed to marshal payload: %s", err)
@@ -90,7 +112,7 @@ func (p *RabbitMQPublisher) publish(routing string, payload interface{}) error {
 
 	err = p.channel.PublishWithContext(
 		ctx,
-		p.cfg.RabbitMQ.Exchange,
+		p.cfg.Exchange,
 		routing,
 		mandatory,
 		immediate,

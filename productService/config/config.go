@@ -51,7 +51,7 @@ func LoadConfigRabbitMQ() RabbitMQ {
 		ConsumerTag:    "products",
 		WorkerPoolSize: 1,
 	}
-	if addr, exists := os.LookupEnv("HOST"); exists {
+	if addr, exists := os.LookupEnv("RABBIT_MQ_ADDRESS"); exists {
 		cfg.Addr = addr
 	}
 	if Exchange, exists := os.LookupEnv("EXCHANGE_NAME"); exists {

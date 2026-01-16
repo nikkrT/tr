@@ -1,0 +1,62 @@
+
+services:
+  product_service:
+    build: ./productService/
+    ports:
+      - 8080:8080
+    environment:
+      - RABBIT_MQ_ADDRESS=amqp://guest:guest@rabbitmq:5672/
+      - HOST=postgres://postgres:password@psql:5432/postgres
+    depends_on:
+      psql:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+  notification_service:
+    build: ./notificationService/
+    ports:
+      - 8081:8081
+    environment:
+      - RABBIT_MQ_ADDRESS=amqp://guest:guest@rabbitmq:5672/
+    depends_on:
+      psql:
+          condition: service_started
+      rabbitmq:
+        condition: service_healthy
+  psql:
+    container_name: postgres
+    image: postgres
+    restart: always
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: postgres
+      POSTGRES_HOST: localhost
+  rabbitmq:
+    container_name: rabbit
+    image: rabbitmq:3-management
+    restart: always
+    ports:
+      - 5672:5672
+      - 15672:15672
+    environment:
+      - RABBITMQ_NODE_IP_ADDRESS=0.0.0.0
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
+      interval: 5s
+      timeout: 15s
+      retries: 5
+  migrator:
+    image: migrate/migrate
+    depends_on:
+      psql:
+        condition: service_started
+    volumes:
+      - ./productService/internal/db/migrations:/migrations
+    command:
+      - -path=/migrations
+      - -database=postgres://postgres:password@psql:5432/postgres?sslmode=disable
+      - up
+

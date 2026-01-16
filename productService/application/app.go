@@ -53,7 +53,7 @@ func (app *Application) Start(ctx context.Context) error {
 
 	productRepo := repo.NewProductRepo(app.db)
 
-	app.rabbitmq, err = events.NewProducerSetup(app.config)
+	app.rabbitmq, err = events.NewProducerSetup(&app.config.RabbitMQ)
 
 	if err != nil {
 		return fmt.Errorf("failed to init rabbitmq: %v", err)

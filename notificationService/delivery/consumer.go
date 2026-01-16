@@ -3,7 +3,9 @@ package delivery
 import (
 	"context"
 	"fmt"
+	"log"
 	"notificationService/config"
+	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
@@ -34,7 +36,28 @@ type RabbitMQConsumer struct {
 }
 
 func NewRabbitMQConsumer(service NotificationDelivery, cfg config.RabbitMQ) (*RabbitMQConsumer, error) {
-	conn, err := amqp.Dial(cfg.Addr)
+	var conn *amqp.Connection
+	var err error
+	counts := 0
+	maxRetries := 30
+	retryDelay := 2 * time.Second
+
+	for {
+		conn, err = amqp.Dial(cfg.Addr)
+		if err == nil {
+			log.Println("✅ Successfully connected to RabbitMQ")
+			break
+		}
+
+		counts++
+		log.Printf("⏳ Failed to connect to RabbitMQ (Attempt %d/%d): %v. Retrying in %v...", counts, maxRetries, err, retryDelay)
+
+		if counts >= maxRetries {
+			log.Fatalf("❌ Could not connect to RabbitMQ after %d attempts: %v", maxRetries, err)
+		}
+
+		time.Sleep(retryDelay)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("Failed to connect to RabbitMQ: %s", err)
 	}
@@ -109,8 +132,7 @@ func (r *RabbitMQConsumer) StartConsumers(workerPoolSize int, consumerTag string
 
 func (r *RabbitMQConsumer) worker(ctx context.Context, msgs <-chan amqp.Delivery) {
 	for delivery := range msgs {
-		fmt.Println("Got a message\n", delivery.Body)
-		fmt.Println("Received a message: ", delivery.Body)
+		fmt.Println("Got a message")
 		switch delivery.RoutingKey {
 		case r.cfg.Keys[0]:
 			if err := r.service.SendCreated(ctx, delivery.Body); err != nil {
