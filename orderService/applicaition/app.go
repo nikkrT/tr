@@ -6,6 +6,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
 
 	"micr_course/orderService/config"
@@ -44,7 +45,9 @@ func (app *App) Start(ctx context.Context) error {
 	defer app.psql.Close()
 
 	orderRepo := repo.NewProductRepo(pool)
-	conn, err := grpc.NewClient(app.config.GRPC.AddressGrpcProduct)
+	conn, err := grpc.NewClient(app.config.GRPC.AddressGrpcProduct,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
 	if err != nil {
 		return fmt.Errorf("failed to create grpc connection: %v", err)
 	}

@@ -10,11 +10,11 @@ RUN go mod download
 COPY . .
 
 
-RUN go build -o product-app ./productService/main.go
+RUN go build -o order-app ./orderService/main.go
 
 FROM alpine:latest
 WORKDIR /root/
 
-COPY --from=builder /app/product-app .
+COPY --from=builder /app/order-app .
 
 CMD ["./order-app"]

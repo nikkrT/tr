@@ -1,5 +1,13 @@
 
 services:
+  gateway:
+    build:
+      context: .
+      dockerfile: ./gateaway/Dockerfile
+    container_name: gateway
+    ports:
+      - 8084:8084
+
   product_service:
     build:
       context: .
@@ -36,11 +44,15 @@ services:
     container_name: order
     ports:
       - 8082:8082
+    environment:
+      - HOST=postgres://postgres:password@psql:5432/postgres
     depends_on:
       psql:
         condition: service_started
       rabbitmq:
         condition: service_healthy
+      product_service:
+        condition: service_started
   psql:
     container_name: postgres
     image: postgres

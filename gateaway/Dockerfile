@@ -9,11 +9,11 @@ RUN go mod download
 COPY . .
 
 
-RUN go build -o product-app ./productService/main.go
+RUN go build -o gateway-app ./gateaway/main.go
 
 FROM alpine:latest
 WORKDIR /root/
 
-COPY --from=builder /app/product-app .
+COPY --from=builder /app/gateway-app .
 
-CMD ["./product-app"]
+CMD ["./gateway-app"]
