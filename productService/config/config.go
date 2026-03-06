@@ -8,6 +8,7 @@ type Config struct {
 	Server   ServerConfig
 	RabbitMQ RabbitMQ
 	Postgres PostgresConfig
+	GRPC     gRPC
 }
 
 type ServerConfig struct {
@@ -26,6 +27,10 @@ type RabbitMQ struct {
 
 type PostgresConfig struct {
 	Addr string
+}
+
+type gRPC struct {
+	Port string
 }
 
 func LoadConfigServer() ServerConfig {
@@ -76,11 +81,22 @@ func LoadConfigPostgres() PostgresConfig {
 	return cfg
 }
 
+func LoadGRPCConfig() gRPC {
+	cfg := gRPC{
+		Port: "9090",
+	}
+	if port, exists := os.LookupEnv("PORT"); exists {
+		cfg.Port = port
+	}
+	return cfg
+}
+
 func LoadConfig() *Config {
 	cfg := &Config{
 		Server:   LoadConfigServer(),
 		RabbitMQ: LoadConfigRabbitMQ(),
 		Postgres: LoadConfigPostgres(),
+		GRPC:     LoadGRPCConfig(),
 	}
 	return cfg
 }

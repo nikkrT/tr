@@ -1,0 +1,97 @@
+package service
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"micr_course/pkg/models"
+
+	"github.com/go-playground/validator/v10"
+)
+
+type ProductRepository interface {
+	Create(ctx context.Context, p models.Product) (int, error)
+	ReadById(ctx context.Context, id int) (models.Product, error)
+	ReadAll(ctx context.Context, filtered string) ([]models.Product, error)
+	Update(ctx context.Context, p models.Product) error
+	DeleteById(ctx context.Context, id int) error
+}
+
+type RabbitmqProductRepository interface {
+	SendProductCreated(ctx context.Context, product interface{}) error
+	SendProductUpdated(ctx context.Context, product interface{}) error
+	SendProductDeleted(ctx context.Context, product interface{}) error
+}
+
+type ProductService struct {
+	Repo ProductRepository
+	Amqp RabbitmqProductRepository
+}
+
+func NewProductService(repository ProductRepository, mq RabbitmqProductRepository) *ProductService {
+	return &ProductService{
+		Repo: repository,
+		Amqp: mq,
+	}
+}
+
+func ValidateProduct(product models.Product) error {
+	validate := validator.New()
+	return validate.Struct(product)
+}
+
+func (s *ProductService) CreateProduct(ctx context.Context, p models.Product) error {
+	err := ValidateProduct(p)
+	if err != nil {
+		return fmt.Errorf("Product validation error: %w", err)
+	}
+	id, err := s.Repo.Create(ctx, p)
+	if err != nil {
+		return fmt.Errorf("Product creation error: %w", err)
+	}
+	product, err := s.Repo.ReadById(ctx, id)
+	err = s.Amqp.SendProductCreated(ctx, product)
+	if err != nil {
+		return fmt.Errorf("Amqp creation error: %w", err)
+	}
+	return nil
+}
+
+var ErrNotFound = errors.New("product not found")
+
+func (s *ProductService) ReadProduct(ctx context.Context, id int) (models.Product, error) {
+	product, err := s.Repo.ReadById(ctx, id)
+	if err != nil {
+		return models.Product{}, fmt.Errorf("Product read error: %w", ErrNotFound)
+	}
+	return product, nil
+}
+func (s *ProductService) ReadAll(ctx context.Context, filteredBy string) ([]models.Product, error) {
+	products, err := s.Repo.ReadAll(ctx, filteredBy)
+	if err != nil {
+		return []models.Product{}, fmt.Errorf("Product read error: %w", err)
+	}
+	return products, nil
+}
+func (s *ProductService) UpdateProduct(ctx context.Context, p models.Product) error {
+	err := ValidateProduct(p)
+	if err != nil {
+		return fmt.Errorf("Product validation error: %w", err)
+	}
+	err = s.Amqp.SendProductUpdated(ctx, p)
+	if err != nil {
+		return fmt.Errorf("Amqp creation error: %w", err)
+	}
+	return s.Repo.Update(ctx, p)
+}
+func (s *ProductService) DeleteProduct(ctx context.Context, id int) error {
+	err := s.Repo.DeleteById(ctx, id)
+	if err != nil {
+		return fmt.Errorf("Product delete error: %w", err)
+	}
+	err = s.Amqp.SendProductDeleted(ctx, id)
+	if err != nil {
+		return fmt.Errorf("Amqp creation error: %w", err)
+	}
+	return nil
+}

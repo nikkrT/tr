@@ -17,4 +17,4 @@ WORKDIR /root/
 
 COPY --from=builder /app/product-app .
 
-CMD ["./product-app"]
+CMD ["./order-app"]

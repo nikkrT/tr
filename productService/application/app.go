@@ -3,24 +3,22 @@ package application
 import (
 	"context"
 	"fmt"
-	"productService/config"
-	"productService/delivery/events"
-
-	"productService/delivery/grpc"
-	"productService/delivery/handlers"
-
-	"productService/internal/db"
-	"productService/internal/db/repo"
-	"productService/internal/routes"
-	"productService/internal/service"
+	pb "micr_course/pkg/proto/productService"
+	"micr_course/productService/config"
+	"micr_course/productService/product/infrastructure/messaging"
+	"micr_course/productService/product/infrastructure/postgres"
+	"micr_course/productService/product/infrastructure/postgres/repo"
+	myGrpc "micr_course/productService/product/interfaces/grpc"
+	"micr_course/productService/product/interfaces/net_requests"
+	"micr_course/productService/product/interfaces/net_requests/routes"
+	"micr_course/productService/product/service"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	g "google.golang.org/grpc"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
 	"net"
 	"net/http"
-	pb "productService/pkg/proto"
 	"time"
 )
 
@@ -28,7 +26,7 @@ type Application struct {
 	router   http.Handler
 	config   *config.Config
 	db       *pgxpool.Pool
-	rabbitmq *events.RabbitMQPublisher
+	rabbitmq *messaging.RabbitMQPublisher
 }
 
 func NewApplication(cfg *config.Config) *Application {
@@ -42,9 +40,9 @@ func NewApplication(cfg *config.Config) *Application {
 
 func (app *Application) Start(ctx context.Context) error {
 
-	pool, err := db.InitDB(ctx, app.config.Postgres)
+	pool, err := postgres.InitDB(ctx, app.config.Postgres)
 	if err != nil {
-		return fmt.Errorf("failed to init db: %v", err)
+		return fmt.Errorf("failed to init postgres: %v", err)
 	}
 
 	app.db = pool
@@ -53,7 +51,7 @@ func (app *Application) Start(ctx context.Context) error {
 
 	productRepo := repo.NewProductRepo(app.db)
 
-	app.rabbitmq, err = events.NewProducerSetup(&app.config.RabbitMQ)
+	app.rabbitmq, err = messaging.NewProducerSetup(&app.config.RabbitMQ)
 
 	if err != nil {
 		return fmt.Errorf("failed to init rabbitmq: %v", err)
@@ -61,8 +59,8 @@ func (app *Application) Start(ctx context.Context) error {
 
 	productService := service.NewProductService(productRepo, app.rabbitmq)
 
-	productHandler := handlers.NewProductHandler(productService)
-	grpcServer := grpc.NewGRPCServer(productService)
+	productHandler := net_requests.NewProductHandler(productService)
+	grpcServer := myGrpc.NewGRPCServer(productService)
 
 	app.router = routes.LoadRoutesProduct(productHandler)
 	defer app.rabbitmq.Close()
@@ -75,7 +73,7 @@ func (app *Application) Start(ctx context.Context) error {
 		WriteTimeout: time.Minute,
 	}
 
-	ch := make(chan error)
+	ch := make(chan error, 2)
 	go func() {
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			ch <- fmt.Errorf("failed to start server: %w", err)
@@ -83,11 +81,11 @@ func (app *Application) Start(ctx context.Context) error {
 		close(ch)
 	}()
 	go func() {
-		lis, err := net.Listen("tcp", ":9090")
+		lis, err := net.Listen("tcp", fmt.Sprintf(":%s", app.config.GRPC.Port))
 		if err != nil {
 			ch <- fmt.Errorf("failed to listen: %v", err)
 		}
-		s := g.NewServer()
+		s := grpc.NewServer()
 		reflection.Register(s)
 		pb.RegisterProductServiceServer(s, grpcServer)
 		ch <- s.Serve(lis)

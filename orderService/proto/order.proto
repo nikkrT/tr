@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package order;
+
+option go_package = "./proto";
+
+service OrderService {
+  rpc CheckAvailability (CheckRequest) returns (CheckAnswer);
+}
+
+message Product {
+  uint32 id = 1;
+  uint32 price = 2;
+  string name = 3;
+  string description = 4;
+}
+
+message CheckRequest {
+  uint32 id = 1;
+}
+
+message CheckAnswer {
+  Product product = 1;
+}

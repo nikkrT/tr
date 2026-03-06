@@ -2,9 +2,9 @@ package main
 
 import (
 	"context"
+	"micr_course/productService/application"
+	"micr_course/productService/config"
 	"os/signal"
-	"productService/application"
-	"productService/config"
 	"syscall"
 )
 

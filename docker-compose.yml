@@ -1,7 +1,10 @@
 
 services:
   product_service:
-    build: ./productService/
+    build:
+      context: .
+      dockerfile: ./productService/Dockerfile
+    container_name: product
     ports:
       - 8080:8080
     environment:
@@ -13,7 +16,10 @@ services:
       rabbitmq:
         condition: service_healthy
   notification_service:
-    build: ./notificationService/
+    build:
+      context: .
+      dockerfile: ./notificationService/Dockerfile
+    container_name: notifications
     ports:
       - 8081:8081
     environment:
@@ -34,6 +40,8 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: postgres
       POSTGRES_HOST: localhost
+    volumes:
+      - ./init-scripts:/init-multiple-dbs.sql
   rabbitmq:
     container_name: rabbit
     image: rabbitmq:3-management
@@ -54,9 +62,10 @@ services:
       psql:
         condition: service_started
     volumes:
-      - ./productService/internal/db/migrations:/migrations
+      - ./productService/product/infrastructure/postgres/migrations:/migrations
+      - ./orderService/order/infrastructure/postgres/migrations:/migrations
     command:
       - -path=/migrations
-      - -database=postgres://postgres:password@psql:5432/postgres?sslmode=disable
+      - -database=postgres://postgres:password@psql:5432/postgres
       - up
 

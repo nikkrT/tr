@@ -3,11 +3,11 @@ package application
 import (
 	"context"
 	"fmt"
+	"micr_course/notificationService/config"
+	"micr_course/notificationService/notification/business"
+	"micr_course/notificationService/notification/infrastucture/messaging"
+	"micr_course/notificationService/notification/infrastucture/notificator"
 	"net/http"
-	"notificationService/config"
-	"notificationService/delivery"
-	"notificationService/internal/infrastucture"
-	"notificationService/internal/usecase"
 
 	"time"
 )
@@ -25,13 +25,13 @@ func NewApplication(config *config.Config) *Application {
 
 func (app *Application) Start(ctx context.Context) error {
 
-	infra := infrastucture.NewInfrastucture()
+	infra := notificator.NewInfrastucture()
 
-	service := usecase.NewService(infra)
+	service := business.NewService(infra)
 
-	consumer, err := delivery.NewRabbitMQConsumer(service, app.config.Amqp)
+	consumer, err := messaging.NewRabbitMQConsumer(service, app.config.Amqp)
 	if err != nil {
-		return fmt.Errorf("delivery.NewRabbitMQConsumer: %w", err)
+		return fmt.Errorf("messaging.NewRabbitMQConsumer: %w", err)
 	}
 
 	server := &http.Server{

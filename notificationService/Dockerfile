@@ -1,9 +1,21 @@
-FROM golang:1.25
+# 1. Этап сборки
+FROM golang:1.25-alpine AS builder
 
 WORKDIR /app
 
-COPY . ./
+COPY go.mod go.sum ./
 
 RUN go mod download
 
-CMD ["go","run","main.go"]
+COPY . .
+
+
+RUN go build -o notification-app ./notificationService/main.go
+
+FROM alpine:latest
+WORKDIR /root/
+
+COPY --from=builder /app/notification-app .
+
+
+CMD ["./notification-app"]

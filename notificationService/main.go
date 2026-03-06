@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
-	"notificationService/application"
-	"notificationService/config"
+	"micr_course/notificationService/application"
+	"micr_course/notificationService/config"
 	"os/signal"
 	"syscall"
 )
