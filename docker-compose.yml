@@ -29,6 +29,18 @@ services:
           condition: service_started
       rabbitmq:
         condition: service_healthy
+  order_service:
+    build:
+      context: .
+      dockerfile: ./orderService/Dockerfile
+    container_name: order
+    ports:
+      - 8082:8082
+    depends_on:
+      psql:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
   psql:
     container_name: postgres
     image: postgres
