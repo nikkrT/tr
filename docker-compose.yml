@@ -22,8 +22,8 @@ services:
       dockerfile: ./gateway/Dockerfile
     container_name: gateway
     environment:
-      - ProductServiceURL=http://product:8081
-      - OrderServiceURL=http://order:8082
+      - ProductServiceURL=product:9090
+      - OrderServiceURL=order:9091
     ports:
       - 8084:8084
   notification_service:
