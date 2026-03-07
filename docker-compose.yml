@@ -8,6 +8,7 @@ services:
     container_name: product
     ports:
       - 8080:8080
+      - 9090:9090
     environment:
       - RABBIT_MQ_ADDRESS=amqp://guest:guest@rabbitmq:5672/
       - HOST=postgres://postgres:password@psql:5432/postgres
@@ -46,9 +47,12 @@ services:
       dockerfile: ./orderService/Dockerfile
     container_name: order
     ports:
-      - 8082:8082
+      - 8083:8083
+      - 9091:9091
     environment:
       - HOST=postgres://postgres:password@psql:5432/postgres
+      - GRPC_PORT=9091
+      - GRPC_PRODUCT_ADDRESS=product_service:9090
     depends_on:
       psql:
         condition: service_started
