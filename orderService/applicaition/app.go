@@ -3,6 +3,7 @@ package applicaition
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"google.golang.org/grpc"
@@ -64,6 +65,7 @@ func (app *App) Start(ctx context.Context) error {
 		lis, err := net.Listen("tcp", fmt.Sprintf(":%s", app.config.GRPC.Port))
 		if err != nil {
 			ch <- fmt.Errorf("failed to listen: %v", err)
+			return
 		}
 		s := grpc.NewServer()
 		reflection.Register(s)
@@ -73,10 +75,9 @@ func (app *App) Start(ctx context.Context) error {
 	}()
 	select {
 	case err := <-ch:
-		fmt.Println(err)
+		log.Fatalf(err.Error())
 		return err
 	case <-ctx.Done():
 		return ctx.Err()
 	}
-
 }

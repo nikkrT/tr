@@ -52,7 +52,7 @@ services:
     environment:
       - HOST=postgres://postgres:password@psql:5432/postgres
       - GRPC_PORT=9091
-      - GRPC_PRODUCT_ADDRESS=product_service:9090
+      - GRPC_PRODUCT_ADDRESS=product:9090
     depends_on:
       psql:
         condition: service_started
