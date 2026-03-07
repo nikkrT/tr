@@ -19,7 +19,7 @@ func NewProductRepo(db *pgxpool.Pool) *OrderRepo {
 }
 
 func (h *OrderRepo) Create(ctx context.Context, order models.OrderModel) (int, error) {
-	sql := "INSERT INTO orders (product, status, created_at) VALUES ($1, $2, $3) RETURNING id"
+	sql := "INSERT INTO orders (product, status, created) VALUES ($1, $2, $3) RETURNING id"
 	var id int
 	err := h.psql.QueryRow(ctx, sql, order.ProductId, order.Status, time.Now()).Scan(&id)
 	if err != nil {

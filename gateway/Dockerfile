@@ -9,7 +9,7 @@ RUN go mod download
 COPY . .
 
 
-RUN go build -o gateway-app ./gateaway/main.go
+RUN go build -o gateway-app ./gateway/main.go
 
 FROM alpine:latest
 WORKDIR /root/

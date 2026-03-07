@@ -22,17 +22,16 @@ func NewGRPCInterface(service Service) *GRPCServer {
 	}
 }
 
-// тут бы больше подошло по семантике микросервиса "MakeOrder"
-func (g *GRPCServer) CheckAvailability(ctx context.Context, req *orderService.CheckRequest) (*orderService.CheckAnswer, error) {
+func (g *GRPCServer) CreateOrder(ctx context.Context, req *orderService.OrderRequest) (*orderService.OrderAnswer, error) {
 	input := int(req.GetId())
 	res, err := g.service.UseCase(ctx, input)
 	if err != nil {
-		return &orderService.CheckAnswer{}, err
+		return &orderService.OrderAnswer{}, err
 	}
 	if res > 0 {
-		return &orderService.CheckAnswer{Ans: true}, nil
+		return &orderService.OrderAnswer{OrderId: uint32(res), Success: true}, nil
 	}
-	return &orderService.CheckAnswer{Ans: false}, nil
+	return &orderService.OrderAnswer{}, nil
 }
 
 func convertGRPCRequestToProduct(req *pb.ReadProductResponse) model.Product {

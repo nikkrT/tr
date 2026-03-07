@@ -45,6 +45,7 @@ func (app *App) Start(ctx context.Context) error {
 	defer app.psql.Close()
 
 	orderRepo := repo.NewProductRepo(pool)
+	fmt.Printf("DEBUG: Connecting to product service at: %q\n", app.config.GRPC.AddressGrpcProduct)
 	conn, err := grpc.NewClient(app.config.GRPC.AddressGrpcProduct,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
@@ -74,5 +75,8 @@ func (app *App) Start(ctx context.Context) error {
 	case err := <-ch:
 		fmt.Println(err)
 		return err
+	case <-ctx.Done():
+		return ctx.Err()
 	}
+
 }

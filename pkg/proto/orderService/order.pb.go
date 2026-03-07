@@ -22,27 +22,28 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type CheckRequest struct {
+type OrderRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            uint32                 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Quantity      uint32                 `protobuf:"varint,2,opt,name=quantity,proto3" json:"quantity,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *CheckRequest) Reset() {
-	*x = CheckRequest{}
+func (x *OrderRequest) Reset() {
+	*x = OrderRequest{}
 	mi := &file_proto_order_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *CheckRequest) String() string {
+func (x *OrderRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*CheckRequest) ProtoMessage() {}
+func (*OrderRequest) ProtoMessage() {}
 
-func (x *CheckRequest) ProtoReflect() protoreflect.Message {
+func (x *OrderRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_proto_order_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -54,39 +55,47 @@ func (x *CheckRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use CheckRequest.ProtoReflect.Descriptor instead.
-func (*CheckRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use OrderRequest.ProtoReflect.Descriptor instead.
+func (*OrderRequest) Descriptor() ([]byte, []int) {
 	return file_proto_order_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *CheckRequest) GetId() uint32 {
+func (x *OrderRequest) GetId() uint32 {
 	if x != nil {
 		return x.Id
 	}
 	return 0
 }
 
-type CheckAnswer struct {
+func (x *OrderRequest) GetQuantity() uint32 {
+	if x != nil {
+		return x.Quantity
+	}
+	return 0
+}
+
+type OrderAnswer struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Ans           bool                   `protobuf:"varint,1,opt,name=ans,proto3" json:"ans,omitempty"`
+	OrderId       uint32                 `protobuf:"varint,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
+	Success       bool                   `protobuf:"varint,2,opt,name=success,proto3" json:"success,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *CheckAnswer) Reset() {
-	*x = CheckAnswer{}
+func (x *OrderAnswer) Reset() {
+	*x = OrderAnswer{}
 	mi := &file_proto_order_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *CheckAnswer) String() string {
+func (x *OrderAnswer) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*CheckAnswer) ProtoMessage() {}
+func (*OrderAnswer) ProtoMessage() {}
 
-func (x *CheckAnswer) ProtoReflect() protoreflect.Message {
+func (x *OrderAnswer) ProtoReflect() protoreflect.Message {
 	mi := &file_proto_order_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -98,14 +107,21 @@ func (x *CheckAnswer) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use CheckAnswer.ProtoReflect.Descriptor instead.
-func (*CheckAnswer) Descriptor() ([]byte, []int) {
+// Deprecated: Use OrderAnswer.ProtoReflect.Descriptor instead.
+func (*OrderAnswer) Descriptor() ([]byte, []int) {
 	return file_proto_order_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *CheckAnswer) GetAns() bool {
+func (x *OrderAnswer) GetOrderId() uint32 {
 	if x != nil {
-		return x.Ans
+		return x.OrderId
+	}
+	return 0
+}
+
+func (x *OrderAnswer) GetSuccess() bool {
+	if x != nil {
+		return x.Success
 	}
 	return false
 }
@@ -114,13 +130,15 @@ var File_proto_order_proto protoreflect.FileDescriptor
 
 const file_proto_order_proto_rawDesc = "" +
 	"\n" +
-	"\x11proto/order.proto\x12\x05order\"\x1e\n" +
-	"\fCheckRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\rR\x02id\"\x1f\n" +
-	"\vCheckAnswer\x12\x10\n" +
-	"\x03ans\x18\x01 \x01(\bR\x03ans2L\n" +
-	"\fOrderService\x12<\n" +
-	"\x11CheckAvailability\x12\x13.order.CheckRequest\x1a\x12.order.CheckAnswerB\tZ\a./protob\x06proto3"
+	"\x11proto/order.proto\x12\x05order\":\n" +
+	"\fOrderRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\rR\x02id\x12\x1a\n" +
+	"\bquantity\x18\x02 \x01(\rR\bquantity\"B\n" +
+	"\vOrderAnswer\x12\x19\n" +
+	"\border_id\x18\x01 \x01(\rR\aorderId\x12\x18\n" +
+	"\asuccess\x18\x02 \x01(\bR\asuccess2F\n" +
+	"\fOrderService\x126\n" +
+	"\vCreateOrder\x12\x13.order.OrderRequest\x1a\x12.order.OrderAnswerB'Z%github.com/nikkrT/tr/pkg/orderServiceb\x06proto3"
 
 var (
 	file_proto_order_proto_rawDescOnce sync.Once
@@ -136,12 +154,12 @@ func file_proto_order_proto_rawDescGZIP() []byte {
 
 var file_proto_order_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_proto_order_proto_goTypes = []any{
-	(*CheckRequest)(nil), // 0: order.CheckRequest
-	(*CheckAnswer)(nil),  // 1: order.CheckAnswer
+	(*OrderRequest)(nil), // 0: order.OrderRequest
+	(*OrderAnswer)(nil),  // 1: order.OrderAnswer
 }
 var file_proto_order_proto_depIdxs = []int32{
-	0, // 0: order.OrderService.CheckAvailability:input_type -> order.CheckRequest
-	1, // 1: order.OrderService.CheckAvailability:output_type -> order.CheckAnswer
+	0, // 0: order.OrderService.CreateOrder:input_type -> order.OrderRequest
+	1, // 1: order.OrderService.CreateOrder:output_type -> order.OrderAnswer
 	1, // [1:2] is the sub-list for method output_type
 	0, // [0:1] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name

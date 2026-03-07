@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"google.golang.org/grpc/codes"
@@ -22,6 +23,7 @@ func (app *GRPC) CheckProductAvailability(ctx context.Context, productId int) (i
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 	feature, err := app.client.ReadProduct(ctx, &pb.ReadProductRequest{Id: int64(productId)})
+	fmt.Println(feature.Product.Name)
 	if err != nil {
 		return -1, status.Error(codes.Internal, err.Error())
 	}

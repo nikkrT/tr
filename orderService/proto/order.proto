@@ -2,23 +2,18 @@ syntax = "proto3";
 
 package order;
 
-option go_package = "./proto";
+option go_package = "github.com/nikkrT/tr/pkg/orderService";
 
 service OrderService {
-  rpc CheckAvailability (CheckRequest) returns (CheckAnswer);
+  rpc CreateOrder (OrderRequest) returns (OrderAnswer);
 }
 
-message Product {
+message OrderRequest {
   uint32 id = 1;
-  uint32 price = 2;
-  string name = 3;
-  string description = 4;
+  uint32 quantity = 2;
 }
 
-message CheckRequest {
-  uint32 id = 1;
-}
-
-message CheckAnswer {
-  Product product = 1;
+message OrderAnswer {
+  uint32 order_id = 1;
+  bool success = 2;
 }

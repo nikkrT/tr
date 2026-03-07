@@ -50,6 +50,9 @@ func (s *UseCase) UseCase(ctx context.Context, productId int) (int, error) {
 		Status:    "created",
 	}
 	orderId, err := s.orderRepository.Create(ctx, order)
+	if err != nil {
+		return -1, fmt.Errorf("orderRepository.Create error: %w", err)
+	}
 	fmt.Println("заказ успешно создан с Id=%d", orderId)
 	return orderId, nil
 }

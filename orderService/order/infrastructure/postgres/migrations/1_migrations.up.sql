@@ -1,6 +1,7 @@
 CREATE TABLE orders (
     id SERIAL PRIMARY KEY,
     product INT NOT NULL,
+    quantity INT NOT NULL,
     status VARCHAR(50) NOT NULL,
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted TIMESTAMP,

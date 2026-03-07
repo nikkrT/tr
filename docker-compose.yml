@@ -1,12 +1,5 @@
 
 services:
-  gateway:
-    build:
-      context: .
-      dockerfile: ./gateaway/Dockerfile
-    container_name: gateway
-    ports:
-      - 8084:8084
 
   product_service:
     build:
@@ -23,6 +16,16 @@ services:
         condition: service_started
       rabbitmq:
         condition: service_healthy
+  gateway:
+    build:
+      context: .
+      dockerfile: ./gateway/Dockerfile
+    container_name: gateway
+    environment:
+      - ProductServiceURL=http://product:8081
+      - OrderServiceURL=http://order:8082
+    ports:
+      - 8084:8084
   notification_service:
     build:
       context: .
