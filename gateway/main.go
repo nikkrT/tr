@@ -18,6 +18,7 @@ import (
 
 	// Импортируем твои сгенерированные proto-файлы
 	pbOrder "micr_course/pkg/proto/orderService"
+	pbProduct "micr_course/pkg/proto/productService"
 )
 
 func main() {
@@ -41,8 +42,22 @@ func main() {
 	// Создаем gRPC клиента для orderService
 	orderClient := pbOrder.NewOrderServiceClient(conn)
 
+	productGrpcAddr := cfg.ProductServiceURL
+	productConn, err := grpc.NewClient(
+		productGrpcAddr,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		log.Fatalf("failed to connect to product gRPC service: %v", err)
+	}
+	defer productConn.Close()
+
+	// Создаем gRPC клиента для productService
+	productClient := pbProduct.NewProductServiceClient(productConn)
+
 	// 2. Инициализируем наши HTTP обработчики (передаем им gRPC клиента)
 	orderHandler := handlers.NewOrderHandler(orderClient)
+	productHandler := handlers.NewProductHandler(productClient)
 
 	// 3. Настраиваем роутер chi
 	router := chi.NewRouter()
@@ -53,6 +68,11 @@ func main() {
 	// Регистрируем эндпоинт для создания заказа
 	router.Route("/api/v1/orders", func(r chi.Router) {
 		r.Post("/", orderHandler.CreateOrder) // POST /api/v1/orders
+	})
+
+	// Регистрируем эндпоинт для создания товара
+	router.Route("/api/v1/products", func(r chi.Router) {
+		r.Post("/", productHandler.CreateProduct) // POST /api/v1/products
 	})
 
 	// 4. Запускаем HTTP сервер Gateway
