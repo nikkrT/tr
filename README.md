@@ -11,7 +11,6 @@
 1. **API Gateway (`gateway`)**
     - Единая точка входа для всех клиентских HTTP-запросов.
     - Проксирует запросы и транслирует REST/HTTP-вызовы во внутренние gRPC-запросы к микросервисам.
-    - Навайбкожен
 2. **Product Service (`productService`)**
     - Управление каталогом товаров (CRUD операции).
     - Предоставляет gRPC API для других сервисов (например, для проверки наличия товара).
@@ -35,7 +34,7 @@
 ## 📁 Структура проекта
 
 ```text
-├── gateaway/             # API Gateway сервис
+├── gateway/              # API Gateway сервис
 ├── productService/       # Микросервис товаров
 ├── orderService/         # Микросервис заказов
 ├── notificationService/  # Микросервис уведомлений
@@ -83,7 +82,17 @@ curl -X POST http://localhost:8084/api/v1/orders \
   -d '{"product_id": 1, "quantity": 2}'
 ```
 
-*(Добавьте сюда другие примеры запросов, например, для получения списка товаров, как только они будут реализованы в Gateway).*
+**Создание товара:**
+```bash
+curl -X POST http://localhost:8084/api/v1/products \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Laptop", "description": "A powerful laptop", "price": 1500}'
+```
+
+**Получение списка товаров (напрямую через productService):**
+```bash
+curl http://localhost:8080/api/v1/products
+```
 
 ## 📝 Статус проекта / TODO
 
@@ -92,6 +101,7 @@ curl -X POST http://localhost:8084/api/v1/orders \
 - [x] Настроить gRPC взаимодействие между `Order` и `Product`.
 - [x] Настроить RabbitMQ Publisher/Consumer.
 - [x] Написать API Gateway.
+- [x] Добавить эндпоинт создания товара в Gateway.
 - [ ] Добавить JWT Аутентификацию в Gateway.
 - [ ] Покрыть критичные участки кода unit-тестами.
 - [ ] Прикрутить логирование (например, `zap` или `logrus`) и трейсинг.
