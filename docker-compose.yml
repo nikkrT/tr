@@ -11,7 +11,7 @@ services:
       - 9090:9090
     environment:
       - RABBIT_MQ_ADDRESS=amqp://guest:guest@rabbitmq:5672/
-      - HOST=postgres://postgres:password@psql:5432/postgres
+      - POSTGRES_HOST=postgres://postgres:password@psql:5432/postgres
     depends_on:
       psql:
         condition: service_started
@@ -23,10 +23,13 @@ services:
       dockerfile: ./gateway/Dockerfile
     container_name: gateway
     environment:
-      - ProductServiceURL=product:9090
-      - OrderServiceURL=order:9091
+      - ProductServiceURL=dns:///product:9090
+      - OrderServiceURL=dns:///order:9091
     ports:
       - 8084:8084
+    depends_on:
+      - product_service
+      - order_service
   notification_service:
     build:
       context: .
@@ -52,7 +55,7 @@ services:
     environment:
       - HOST=postgres://postgres:password@psql:5432/postgres
       - GRPC_PORT=9091
-      - GRPC_PRODUCT_ADDRESS=product:9090
+      - GRPC_PRODUCT_ADDRESS=dns:///product:9090
     depends_on:
       psql:
         condition: service_started
@@ -93,10 +96,10 @@ services:
       psql:
         condition: service_started
     volumes:
-      - ./productService/product/infrastructure/postgres/migrations:/migrations
-      - ./orderService/order/infrastructure/postgres/migrations:/migrations
+      - ./productService/product/infrastructure/postgres/migrations:/migrations-product
+      - ./orderService/order/infrastructure/postgres/migrations:/migrations-order
+    entrypoint: ["/bin/sh", "-c"]
     command:
-      - -path=/migrations
-      - -database=postgres://postgres:password@psql:5432/postgres
-      - up
-
+      - |
+        migrate -path=/migrations-product -database=postgres://postgres:password@psql:5432/postgres?sslmode=disable up &&
+        migrate -path=/migrations-order -database=postgres://postgres:password@psql:5432/postgres?sslmode=disable up

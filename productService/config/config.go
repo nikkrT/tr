@@ -75,7 +75,7 @@ func LoadConfigPostgres() PostgresConfig {
 	cfg := PostgresConfig{
 		Addr: "postgres://postgres:password@localhost:5432/postgres",
 	}
-	if addr, exists := os.LookupEnv("HOST"); exists {
+	if addr, exists := os.LookupEnv("POSTGRES_HOST"); exists {
 		cfg.Addr = addr
 	}
 	return cfg

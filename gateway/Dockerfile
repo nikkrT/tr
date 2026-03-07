@@ -12,6 +12,8 @@ COPY . .
 RUN go build -o gateway-app ./gateway/main.go
 
 FROM alpine:latest
+RUN apk add --no-cache curl
+
 WORKDIR /root/
 
 COPY --from=builder /app/gateway-app .
